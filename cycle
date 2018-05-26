@@ -1,0 +1,8 @@
+#!/bin/bash
+
+
+while ! ssh -o "StrictHostKeyChecking=no" -i /tmp/id_rsa root@$1 ls /tmp/complete > /dev/null; do
+echo "we stay verifying connect"
+sleep 30
+done
+echo "okay, VM is ready to work"
