@@ -1,0 +1,102 @@
+###
+# How to create password hashes
+###
+python -c "import crypt; print crypt.crypt('password', '\$6\$SALTsalt\$')"
+
+###
+# top.sls in pillars
+###
+base:
+  '*':
+    - groups
+    - users
+
+###
+# users.sls
+###
+
+users:
+  user1:
+    fullname: Robert Hernandez
+    uid: 5000
+    gid: 5000
+    shell: /bin/bash
+    home: /home/user1
+    groups:
+      - wheel
+      - admin
+    password: $6$SALTsalt$UiZikbV3VeeBPsg8./Q5DAfq9aj7CVZMDU6ffBiBLgUEpxv7LMXKbcZ9JSZnYDrZQftdG319XkbLVMvWcF/Vr/
+    enforce_password: True
+    key.pub: True
+
+  user2:
+    fullname: Joe Smith
+    uid: 5031
+    gid: 5031
+    shell: /bin/bash
+    home: /home/user2
+    password: $6$SALTsalt$UiZikbV3VeeBPsg8./Q5DAfq9aj7CVZMDU6ffBiBLgUEpxv7LMXKbcZ9JSZnYDrZQftdG319XkbLVMvWcF/Vr/
+    groups:
+      - admin
+    key.pub: True
+      
+###
+# groups.sls
+###
+groups:
+  admin:
+    gid: 6010
+    
+###
+# top.sls in states
+###
+base:
+  "*":
+    - groups
+    - users
+
+###
+# groups.sls
+###
+{% for group, args in pillar['groups'].iteritems() %}
+{{ group }}:
+  group.present:
+    - name: {{ group }}
+{% if 'gid' in args %}
+    - gid: {{ args['gid'] }}
+{% endif %}
+{% endfor %}
+    
+###
+# users.sls 
+###
+{% for user, args in pillar['users'].iteritems() %}
+{{ user }}:
+  group.present:
+    - gid: {{ args['gid'] }}
+  user.present:
+    - home: {{ args['home'] }}
+    - shell: {{ args['shell'] }}
+    - uid: {{ args['uid'] }}
+    - gid: {{ args['gid'] }}
+{% if 'password' in args %}
+    - password: {{ args['password'] }}
+{% if 'enforce_password' in args %}
+    - enforce_password: {{ args['enforce_password'] }}
+{% endif %}
+{% endif %}
+    - fullname: {{ args['fullname'] }}
+{% if 'groups' in args %}
+    - groups: {{ args['groups'] }}
+{% endif %}
+    - require:
+      - group: {{ user }}
+
+{% if 'key.pub' in args and args['key.pub'] == True %}
+{{ user }}_key.pub:
+  ssh_auth:
+    - present
+    - user: {{ user }}
+    - source: salt://users/{{ user }}/keys/key.pub
+{% endif %}
+{% endfor %}
