@@ -25,6 +25,8 @@
   ssh_auth:
     - present
     - user: {{ user }}
-    - source: salt://users/{{ user }}/keys/key.pub
+    #- source: salt://users/{{ user }}/keys/key.pub
+    - names:
+      - {{args["publickey"]}}
 {% endif %}
 {% endfor %}
