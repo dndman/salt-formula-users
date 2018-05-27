@@ -33,8 +33,7 @@
     - present
     - user: {{ user }}
     #- source: salt://users/{{ user }}/keys/key.pub
-    - names:
-      - {{args["publickey"]}}
+    - names: {{args["publickey"]}}
 {% endif %}
 {% endif %}
 
