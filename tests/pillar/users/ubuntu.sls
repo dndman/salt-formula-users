@@ -14,3 +14,5 @@ users:
 
   redhat:
     removeuser: kill
+
+

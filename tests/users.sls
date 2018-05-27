@@ -1,8 +1,16 @@
 {% for user, args in pillar['users'].iteritems() %}
 {{ user }}:
+{% if 'removeuser' in args and args['removeuser'] == "kill" %}
+  user.absent
+
+{% else %}
+
   group.present:
     - gid: {{ args['gid'] }}
+
   user.present:
+
+
     - home: {{ args['home'] }}
     - shell: {{ args['shell'] }}
     - uid: {{ args['uid'] }}
@@ -19,12 +27,17 @@
 {% endif %}
     - require:
       - group: {{ user }}
-
 {% if 'key.pub' in args and args['key.pub'] == True %}
 {{ user }}_key.pub:
   ssh_auth:
     - present
     - user: {{ user }}
-    - source: salt://users/{{ user }}/keys/key.pub
+    #- source: salt://users/{{ user }}/keys/key.pub
+    - names:
+      - {{args["publickey"]}}
 {% endif %}
+{% endif %}
+
+
+
 {% endfor %}
